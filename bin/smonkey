@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+STDOUT.sync = true
+
+require 'mercenary'
+require 'simpleMonkey'
+
+Mercenary.program(:simpleMonkey) do |p|
+  p.version SimpleMonkey::VERSION
+  p.description 'smonkey maintains OpenSSH identities using GnuPG keys distributed via a system of OpenPG key servers'
+  p.syntax 'smonkey <subcommand> [options]'
+
+  SimpleMonkey::Command.subclasses.each { |c| c.init_with_program(p) }
+
+  p.action do |args, options|
+    if args.empty?
+      puts p
+    else
+      unless p.has_command?(args.first)
+        puts "Invalid command. Use --help for more information"
+      end
+    end
+  end
+end
+

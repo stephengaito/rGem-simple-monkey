@@ -1,0 +1,126 @@
+= rGem-simple-monkey
+
+home :: https://github.com/stephengaito/rGem-simple-monkey
+
+== DESCRIPTION:
+
+SimpleMonkey is a simple Ruby/mercenary based tool to use GnuPG's 
+web-of-trust to manage OpenSSH identities. It has been inspired by 
+{MonkeySphere}[http://web.monkeysphere.info/].
+
+Any OpenSSH connection is allowed by checking public keys in two 
+complementary key collections:
+
+* *known_hosts:* The system's and/or user's known_hosts file is checked 
+to see if it contians the public key corresponding to the private key 
+of a remote host system that a user is attempting to ssh into. If the 
+corresponding public key can be found the connection is allowed. If it 
+can't be found, then the user is typically asked to accept a new public 
+key from the remote host. Users should _ONLY_ accept these public keys 
+_if_ they have checked the key's finger print matches that of the 
+remote hosts.... alas this is rarely done by an individual user. The 
+*SimpleMonkey* tool allows these public keys to be updated according to 
+the collection of remote hosts whose corresponding GnuPG keys have been 
+signed by one or more system Admins (who _have_ checked the relevant 
+finger prints).
+
+* *authorized_keys:* The remote host checks to see if the public key 
+offered by the user corresponds to a public key in the remote user's 
+authorized_keys file. If it can't be found then the connection is 
+refused. If the corresponding public keys can be found then the 
+connection is allowed. More importantly, OpenSSH's authorized_keys file 
+also provides ways to configure, on a key by key basis, what commands 
+can be run by the remote user. The *SimpleMonkey* tool allows remote 
+authorized_keys files to be regularly updated to the OpenSSH keys 
+corresponding to GnuPG keys signed by one or more System Admins (who 
+_must_ have checked the identity of a given user) whos corresponding 
+GnuPG User Ids are listed in a SimpleMonkey authorized_keys.conf file. 
+This authorized_keys.conf file can also contain constrained commands 
+for each configured User Id.
+
+SimpleMonkey depends upon a system of OpenPG key servers, such as 
+{SKS}[https://bitbucket.org/skskeyserver/sks-keyserver/wiki/Home] or 
+{SimpleHKP}[https://github.com/stephengaito/rGem-simple-gnupg-keyserver], 
+to distribute the GnuPG keys of both servers and users signed by one or 
+more System Admins.
+
+Given these distributed GnuPG keys, the SimpleMonkey tool automates the 
+process of updating any corresponding known_hosts or authorized_keys 
+files. Typically this is done by system-wide or user cron commands on 
+all machines in a given Administrative domain.
+
+== SYNOPSIS:
+
+To publish a machine's existing OpenSSH key:
+
+  $ smonkey host publish
+
+To publish a user's existing OpenSSH key:
+
+  $ smonkey user publish
+
+To update a user's known_hosts file:
+
+  $ smonkey user update hosts
+
+To update a system's known_hosts file:
+
+  $ smonkey system update hosts
+
+To update a user's authorized_keys file:
+
+  $ smonkey user update keys
+
+To update all user's known_host files:
+
+  $ smonkey all update hosts
+
+To update all user's authroized_keys file:
+
+  $ smonkey all update keys
+
+== INSTALL:
+
+On each machine which will use SimpleMonkey:
+
+  $ gem install simple-monkey
+
+== REQUIREMENTS:
+
+Ruby gems:
+
+* SafeYAML
+
+* Mercenary
+
+OS Commands:
+
+* GnuPG
+
+* MonkeySphere (for the key translators)
+
+== LICENSE:
+
+(The MIT License)
+
+Copyright (c) 2015 Stephen Gaito
+
+Permission is hereby granted, free of charge, to any person obtaining a 
+copy of this software and associated documentation files (the 
+'Software'), to deal in the Software without restriction, including 
+without limitation the rights to use, copy, modify, merge, publish, 
+distribute, sublicense, and/or sell copies of the Software, and to 
+permit persons to whom the Software is furnished to do so, subject to 
+the following conditions:
+
+The above copyright notice and this permission notice shall be included 
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+

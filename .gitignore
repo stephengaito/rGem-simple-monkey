@@ -1,0 +1,6 @@
+Manifest.txt
+*.gem
+/pkg/
+/tmp/
+/rdoc/
+
