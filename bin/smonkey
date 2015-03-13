@@ -9,6 +9,8 @@ Mercenary.program(:simpleMonkey) do |p|
   p.version SimpleMonkey::VERSION
   p.description 'smonkey maintains OpenSSH identities using GnuPG keys distributed via a system of OpenPG key servers'
   p.syntax 'smonkey <subcommand> [options]'
+  p.option 'config', '-C', '--config PATH', 'Specify an alternate simpleMonkey configuration file'
+  p.option 'debug',  '-d', '--debug',       'Provide a more verbose debugging output'
 
   SimpleMonkey::Command.subclasses.each { |c| c.init_with_program(p) }
 

@@ -53,31 +53,31 @@ all machines in a given Administrative domain.
 
 To publish a machine's existing OpenSSH key:
 
-  $ smonkey host publish
+  $ smonkey publish host
 
 To publish a user's existing OpenSSH key:
 
-  $ smonkey user publish
+  $ smonkey publish user
 
 To update a user's known_hosts file:
 
-  $ smonkey user update hosts
-
-To update a system's known_hosts file:
-
-  $ smonkey system update hosts
-
-To update a user's authorized_keys file:
-
-  $ smonkey user update keys
+  $ smonkey update hosts user
 
 To update all user's known_host files:
 
-  $ smonkey all update hosts
+  $ smonkey update hosts all
+
+To update a system's known_hosts file:
+
+  $ smonkey update hosts system
+
+To update a user's authorized_keys file:
+
+  $ smonkey update keys user
 
 To update all user's authroized_keys file:
 
-  $ smonkey all update keys
+  $ smonkey update keys all
 
 == INSTALL:
 

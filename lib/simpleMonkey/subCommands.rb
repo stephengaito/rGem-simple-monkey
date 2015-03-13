@@ -4,10 +4,8 @@
 # methods below.
 #
 
-require 'simpleMonkey/subCommands'
-
 module SimpleMonkey
-  class Command < Mercenary::Command
+  class SubCommand < Mercenary::Command
     class << self
 
       def inherited(base)
@@ -18,21 +16,11 @@ module SimpleMonkey
         @subclasses ||= []
       end
 
-      def init_with_program(p)
+      def init_with_command(p)
         raise NotImplementedError.new("")
       end
 
     end
-  end
-end
-
-# Automatically require all known commands
-#
-Dir.chdir(File.dirname(__FILE__)) do 
-  $LOAD_PATH << Dir.pwd
-  Dir[File.join("commands", "**", "*.rb")].sort.each do |f|
-    #puts "Requiring [#{f}]"
-    require f
   end
 end
 
