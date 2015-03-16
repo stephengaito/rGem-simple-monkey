@@ -1,6 +1,11 @@
+#require 'process'
+
 module SimpleMonkey
 
   module Utils
+    def isRoot?
+      Process.uid == 0
+    end
 
     def system(cmd)
       puts "running: [#{cmd}]" if @debug

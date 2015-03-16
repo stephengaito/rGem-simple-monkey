@@ -1,3 +1,5 @@
+require 'open3'
+
 module SimpleMonkey
 
   module GnuPG
@@ -16,29 +18,31 @@ module SimpleMonkey
       gpg2cmd = "gpg2 --homedir #{@keyDir} --with-fingerprint --with-colons --check-sigs"
       puts gpg2cmd if @debug
       lastKey = Hash.new
-      IO.popen(gpg2cmd, 'r').readlines.each do | aLine |
-        next if aLine =~ /^tru/
-        if aLine =~ /^pub/ then
-          saveLastKey(lastKey)
-          lastKey = Hash.new
-          keyData = aLine.split(/:/)
-          lastKey['userID']    = keyData[9].gsub(/\\x3a/,':') # user ID
-          lastKey['keyID']     = keyData[4] #  key ID
-          lastKey['algorithm'] = keyData[3] #  key type (algorithm)
-          lastKey['len']       = keyData[2] #  key length
-          lastKey['created']   = keyData[5] #  creation date
-          lastKey['expires']   = keyData[6] #  expiration date
-          lastKey['flags']     = keyData[1] #  flags
-          lastKey['colonData'] = aLine
-          next
+      IO.popen(gpg2cmd, 'r') do | gpgPipe |
+        gpgPipe.readlines.each do | aLine |
+          next if aLine =~ /^tru/
+          if aLine =~ /^pub/ then
+            saveLastKey(lastKey)
+            lastKey = Hash.new
+            keyData = aLine.split(/:/)
+            lastKey['userID']    = keyData[9].gsub(/\\x3a/,':') # user ID
+            lastKey['keyID']     = keyData[4] #  key ID
+            lastKey['algorithm'] = keyData[3] #  key type (algorithm)
+            lastKey['len']       = keyData[2] #  key length
+            lastKey['created']   = keyData[5] #  creation date
+            lastKey['expires']   = keyData[6] #  expiration date
+            lastKey['flags']     = keyData[1] #  flags
+            lastKey['colonData'] = aLine
+            next
+          end
+          lastKey['userID'] = aLine.split(/:/)[9].gsub(/\\x3a/,':') if
+            aLine =~ /^uid/ && lastKey['userID'].empty?
+          lastKey['colonData'] << aLine
         end
-        lastKey['userID'] = aLine.split(/:/)[9].gsub(/\\x3a/,':') if
-          aLine =~ /^uid/ && lastKey['userID'].empty?
-        lastKey['colonData'] << aLine
       end
       saveLastKey(lastKey)
       @keyData.each_pair do | key, value |
-        value['humanData'] = `gpg2 --list-sig #{key}`
+        value['humanData'] = `gpg2 --homedir #{@keyDir} --list-sig #{key}`
       end
       pp @keyData if @debug
       puts "SimpleMonkey: finished loading keys" if @debug
@@ -71,9 +75,26 @@ module SimpleMonkey
         return true
       when 0
         puts "Creating new openPGP key from [#{@sshKey}] with key UID [#{keyUID}]" if @debug
-        convertCmd  = "pem2openpgp #{keyUID} < #{@sshKey} "
-        convertCmd << "| gpg2 --homedir #{@keyDir} --import"
-        return system(convertCmd)
+        sshKey = File.read(@sshKey)
+        return false if sshKey.empty?
+        gpgKey = ""
+        pemCmd = "pem2openpgp #{keyUID}"
+        puts pemCmd if @debug
+        Open3.popen2(pemCmd) do | pemStdIn, pemStdOut, wait_thr |
+          pemStdIn.write(sshKey)
+          pemStdIn.close
+          gpgKey = pemStdOut.read
+          pemStdOut.close
+        end
+        return false if gpgKey.empty?
+        gpg2Cmd = "gpg2 --homedir #{@keyDir} --import"
+        puts gpg2Cmd if @debug
+        IO.popen(gpg2Cmd, 'w') do | gpgPipe |
+          gpgPipe.write(gpgKey)
+        end
+        result = $?
+        pp result if @debug
+        return result
       end
       puts "Too many keys with the key UID of [#{keyUID}]"
       return false

@@ -1,7 +1,9 @@
 
+require 'simpleMonkey/commands/publishCommand'
+
 module SimpleMonkey
 
-  class PublishUserCommand < SubCommand
+  class PublishUserCommand < PublishCommand
 
     def self.init_with_command(c)
       c.command(:user) do | sc |
