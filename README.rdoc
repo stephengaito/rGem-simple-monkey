@@ -97,8 +97,6 @@ OS Commands:
 
 * GnuPG
 
-* MonkeySphere (for the key translators)
-
 == LICENSE:
 
 (The MIT License)
