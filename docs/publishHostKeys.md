@@ -55,7 +55,7 @@ to build the system known_hosts file (usually,
 ## Security concerns:
 
 * the 'publish host' and 'update hosts' commands MUST be run by root 
-since they are reading/writing files which must only be done by root.  
+since they are reading/writing files which must only be done by root. 
 The publish host command can be run by configuration scripts. The 
 update hosts command is usually run as a cron command.
 
@@ -72,4 +72,36 @@ GnuPG fingerprint to be used to identify the SystemAdmin's public keys.
 * the OpenSSH client configuration on ALL machines should have the 
 'StrictHostKeyChecking' option set to yes for ALL machines in the 
 system's domain.
+
+## Future work
+
+At the moment, this process does not really leaverage the GnuPG 
+web-of-trust in any essential way. To do that we would need to have 
+each machine create its own GnuPG identity (private keys) but at the 
+moment this is impossible since the 'publish host' command MUST be run 
+unattended in a configuration script.
+
+What we need is to be able to use gpg-agent in 'forwarding' mode to 
+allow the SystemAdmin's gng-agent to provide any passphrases required. 
+However true gng-agent forwarding can not be configured until at least 
+VividVervet is released in April 2015 (we need OpenSSH 6.7's ability to 
+forward Unix sockets).
+
+Until then we could use socat to forward a unix socket by mascarading 
+the unix socket as a TCP socket and then forwarding the TCP socket. The 
+problems with this is that TCP sockets have far fewer controls over who 
+is allowed to connect to them relative to Unix sockets, providing 
+significant security risks.
+
+For ideas on how to forward gng-agents see:
+
+http://unix.stackexchange.com/questions/186294/how-do-i-combine-ssh-agent-forwarding-and-gpg-agent
+
+http://www.jwiltshire.org.uk/content/2010/12/19/the-perfect-gpg-agent-setup/
+
+http://www.gossamer-threads.com/lists/gnupg/users/68713
+
+http://superuser.com/questions/161973/how-can-i-forward-a-gpg-key-via-ssh-agent
+
+http://www.snafu.priv.at/interests/crypto/remotegpg.html
 
