@@ -4,25 +4,15 @@ module SimpleMonkey
   class PublishCommand < Command
     extend SubCommand
     extend Utils
-    extend GnuPG
+    extend Keys
+    extend Identities
+    extend SSH
 
     class << self
 
-#      def inherited(base)
-#        subclasses << base
-#      end
-
-#      def subclasses
-#        @subclasses ||= []
-#      end
-
-#      def init_with_command(p)
-#        raise NotImplementedError.new("")
-#      end
-
       def init_with_program(p)
         p.command(:publish) do | c |
-          c.syntax 'publish {user|host} [options]'
+          c.syntax 'publish <subcommand> [options]'
           c.description "publishes a user's or host's existing OpenSSH key"
           c.action do | args, options |
             c.logger.error "You must specify either user or host"

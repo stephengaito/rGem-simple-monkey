@@ -2,7 +2,7 @@ require 'open3'
 
 module SimpleMonkey
 
-  module GnuPG
+  module Keys
 
     def saveLastKey(lastKey)
       lastKey['colonData'].gsub!(/\\x3a/,':') if 
@@ -28,7 +28,7 @@ module SimpleMonkey
             lastKey['userID']    = keyData[9].gsub(/\\x3a/,':') # user ID
             lastKey['keyID']     = keyData[4] #  key ID
             lastKey['algorithm'] = keyData[3] #  key type (algorithm)
-            lastKey['len']       = keyData[2] #  key length
+            lastKey['length']    = keyData[2] #  key length
             lastKey['created']   = keyData[5] #  creation date
             lastKey['expires']   = keyData[6] #  expiration date
             lastKey['flags']     = keyData[1] #  flags
@@ -42,10 +42,24 @@ module SimpleMonkey
       end
       saveLastKey(lastKey)
       @keyData.each_pair do | key, value |
-        value['humanData'] = `gpg2 --homedir #{@keyDir} --list-sig #{key}`
+        gpg2cmd = "gpg2 --homedir #{@keyDir} --list-sig #{key}"
+        puts gpg2cmd if @debug
+        IO.popen(gpg2cmd) do | gpgPipe |
+          value['humanData'] = gpgPipe.read
+        end
       end
       pp @keyData if @debug
       puts "SimpleMonkey: finished loading keys" if @debug
+    end
+
+    def getSysAdminKeys
+      @sysAdmins = [ @sysAdmins ] unless @sysAdmins.is_a?(Array)
+      @sysAdmins.each do | aSysAdmin |
+        puts "Getting system admin key:\n  [#{aSysAdmin}]\n from [#{@internalKeyServer}] (internal)" if @debug
+        systemFailOK("gpg2 --homedir #{@keyDir} --keyserver #{@internalKeyServer} --recv-keys #{aSysAdmin}")
+        puts "Getting system admin key:\n  [#{aSysAdmin}]\n from [#{@externalKeyServer}] (external)" if @debug
+        systemFailOK("gpg2 --homedir #{@keyDir} --keyserver #{@externalKeyServer} --recv-keys #{aSysAdmin}")
+      end
     end
 
     def refreshKeys
@@ -67,41 +81,21 @@ module SimpleMonkey
       keyIDs
     end
 
-    def convertedKeySSH2GPG(keyUID)
-      keyIDs = findKeys(keyUID)
-      case keyIDs.size
-      when 1
-        puts "SSH key [#{@sshKey}] with key UID [#{keyUID}] already converted" if @debug
-        return true
-      when 0
-        puts "Creating new openPGP key from [#{@sshKey}] with key UID [#{keyUID}]" if @debug
-        sshKey = File.read(@sshKey)
-        return false if sshKey.empty?
-        gpgKey = ""
-        pemCmd = "pem2openpgp #{keyUID}"
-        puts pemCmd if @debug
-        Open3.popen2(pemCmd) do | pemStdIn, pemStdOut, wait_thr |
-          pemStdIn.write(sshKey)
-          pemStdIn.close
-          gpgKey = pemStdOut.read
-          pemStdOut.close
-        end
-        return false if gpgKey.empty?
-        gpg2Cmd = "gpg2 --homedir #{@keyDir} --import"
-        puts gpg2Cmd if @debug
-        IO.popen(gpg2Cmd, 'w') do | gpgPipe |
-          gpgPipe.write(gpgKey)
-        end
-        result = $?
-        pp result if @debug
-        return result
-      end
-      puts "Too many keys with the key UID of [#{keyUID}]"
-      return false
-    end
-
     def pushKey(keyID)
       system("gpg2 --homedir #{@keyDir} --keyserver #{@internalKeyServer} --send-key #{keyID}")
+    end
+
+    def encryptFile(keyID, fileContents)
+      encryptedFile = ""
+      gpg2cmd = "gpg2 --homedir #{@keyDir} --yes --armor --output - --encrypt --recipient #{keyID} --trusted-key #{keyID}"
+      puts gpg2cmd if @debug
+      Open3.popen2(gpg2cmd) do | gpg2In, gpg2Out, gpg2Thread |
+        gpg2In.write(fileContents)
+        gpg2In.close
+        encryptedFile = gpg2Out.read
+      end
+      puts encryptedFile if @debug
+      encryptedFile
     end
 
   end

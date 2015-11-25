@@ -15,8 +15,9 @@ module SimpleMonkey
       #
       # setup various variables
       #
-      @keyUID = Config['hostKeyUid']
-      @sshKey = Config['hostSshKey']
+      @sysAdmins = Config['systemAdminFingerPrints']
+      @keyUID    = Config['hostKeyUid']
+      @sshKeys   = Config['hostSshKeys']
       #
       @internalKeyServer = Config['internalKeyServer']
       @externalKeyServer = Config['externalKeyServer']

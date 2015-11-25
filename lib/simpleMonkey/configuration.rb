@@ -11,14 +11,24 @@ module SimpleMonkey
     DEFAULTS = {
       'config' => '/etc/simpleMonkeyConfig.yaml',
       'debug'  => false,
+      'systemAdminFingerPrints' => [
+        'unknown'
+      ],
       'hostKeyDir' => '/var/lib/simpleMonkey/hostKeyDir',
       'userKeyDir' => ENV['HOME']+'/.gnupg',
       'internalKeyServer' => 'unknown', 
       'externalKeyServer' => 'pool.sks-keyservers.net',
-      'hostKeyUid' => Socket.gethostname,
+      'hostKeyUid' => Socket.gethostname.encode(Encoding::UTF_8),
+      'hostIP'     => Socket.ip_address_list.reject{ | ipObj | ipObj.ipv6? }.collect{ | ipObj | ipObj.ip_address.encode(Encoding::UTF_8) },
       'userKeyUid' => ENV['USER'],
-      'hostSshKey' => '/etc/ssh/ssh_host_rsa_key',
-      'userSshKey' => ENV['HOME'] + '/.ssh/id_rsa',
+      'hostSshKeys' => [
+        '/etc/ssh/ssh_host_ecdsa_key.pub',
+        '/etc/ssh/ssh_host_rsa_key.pub',
+        '/etc/ssh/ssh_host_dsa_key.pub'
+      ],
+      'userSshKeys' => [
+        ENV['HOME'] + '/.ssh/id_rsa.pub'
+      ]
     }
 
     class << self

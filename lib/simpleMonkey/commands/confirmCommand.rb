@@ -1,7 +1,7 @@
 
 module SimpleMonkey
 
-  class UpdateCommand < Command
+  class ConfirmCommand < Command
     extend SubCommand
     extend Utils
     extend Keys
@@ -11,14 +11,14 @@ module SimpleMonkey
     class << self
 
       def init_with_program(p)
-        p.command(:update) do | c |
+        p.command(:confirm) do | c |
           c.syntax 'update {keys|hosts} [options]'
-          c.description "updates a user's or system's authorized_keys or known_hosts files"
+          c.description "used by the SystemAdmin to confirm a host's or user's identity"
           c.action do | args, options |
-            c.logger.error "You must specify either keys or hosts"
+            c.logger.error "You must specify either host or user"
             puts c
           end
-          SimpleMonkey::UpdateCommand.subclasses.each do | subCmd |
+          SimpleMonkey::ConfirmCommand.subclasses.each do | subCmd |
             subCmd.init_with_command(c)
           end
         end
